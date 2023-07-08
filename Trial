@@ -5,12 +5,10 @@
 
 using namespace std;
 
-struct Task
-{
+struct Task {
     string name;
     string description;
 };
-
 
 struct User {
     string name;
@@ -23,9 +21,10 @@ vector<User> users;
 void addUser() {
     User newUser;
     cout << "Enter name: ";
-    cin >> newUser.name;
+    cin.ignore();
+    getline(cin, newUser.name);
     cout << "Enter password: ";
-    cin >> newUser.password;
+    getline(cin, newUser.password);
     users.push_back(newUser);
     cout << "User added successfully!" << endl;
 }
@@ -45,7 +44,8 @@ void displayUsers() {
 bool loginUser() {
     string name, password;
     cout << "Enter name: ";
-    cin >> name;
+    cin.ignore();
+    getline(cin, name);
     cout << "Enter password: ";
     cin >> password;
 
@@ -55,17 +55,17 @@ bool loginUser() {
             return true;
         }
     }
-    
+
     cout << "Login failed. Invalid username or password." << endl;
     return false;
 }
 
 void addTask() {
     Task newTask;
-    cout << "Enter task: ";
+    cout << "Enter task name: ";
+    cin >> newTask.name;
+    cout << "Enter task description: ";
     cin.ignore();
-    getline(cin, newTask.name);
-    cout<<"Enter task description: ";
     getline(cin, newTask.description);
     users.back().tasks.push_back(newTask);
     cout << "Task added successfully!" << endl;
@@ -78,12 +78,77 @@ void viewTasks() {
         cout << "========= Tasks =========" << endl;
         int taskNumber = 1;
         for (const auto& task : users.back().tasks) {
-            cout << "Task" << taskNumber << ":" << endl;
+            cout << "Task " << taskNumber << ":" << endl;
             cout << "Name: " << task.name << endl;
             cout << "Description: " << task.description << endl;
             cout << "-----------------------" << endl;
             taskNumber++;
         }
+    }
+}
+
+bool deleteTask() {
+    if (users.back().tasks.empty()) {
+        cout << "No tasks found." << endl;
+        return false;
+    } else {
+        cout << "========= Tasks =========" << endl;
+        int taskNumber = 1;
+        for (auto& task : users.back().tasks) {
+            cout << "Task " << taskNumber << ":" << endl;
+            cout << "Name: " << task.name << endl;
+            cout << "Description: " << task.description << endl;
+            cout << "-----------------------" << endl;
+            taskNumber++;
+        }
+
+        int taskIndex;
+        cout << "Enter the task number to delete (0 to go back): ";
+        cin >> taskIndex;
+
+        if (taskIndex >= 1 && taskIndex <= users.back().tasks.size()) {
+            users.back().tasks.erase(users.back().tasks.begin() + taskIndex - 1);
+            cout << "Task deleted successfully!" << endl;
+            return true;
+        } else if (taskIndex == 0) {
+            cout << "Going back to Task Manager menu." << endl;
+            return true;
+        } else {
+            cout << "Invalid task number. Please try again." << endl;
+            return false;
+        }
+    }
+}
+
+void chooseUser() {
+    if (loginUser()) {
+        int userChoice;
+        do {
+            cout << "========= Task Manager =========" << endl;
+            cout << "1. Add Task" << endl;
+            cout << "2. View Tasks" << endl;
+            cout << "3. Delete Task" << endl;
+            cout << "4. Exit" << endl;
+            cout << "Enter your choice: ";
+            cin >> userChoice;
+            switch (userChoice) {
+                case 1:
+                    addTask();
+                    break;
+                case 2:
+                    viewTasks();
+                    break;
+                case 3:
+                    deleteTask();
+                    break;
+                case 4:
+                    cout << "Exiting Task Manager. Goodbye!" << endl;
+                    break;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+            }
+            cout << endl;
+        } while (userChoice != 4);
     }
 }
 
@@ -107,31 +172,7 @@ int main() {
                 displayUsers();
                 break;
             case 3:
-                if (loginUser()) {
-                    int userChoice;
-                    do {
-                        cout << "========= Task Manager =========" << endl;
-                        cout << "1. Add Task" << endl;
-                        cout << "2. View Tasks" << endl;
-                        cout << "3. Exit" << endl;
-                        cout << "Enter your choice: ";
-                        cin >> userChoice;
-                        switch (userChoice) {
-                            case 1:
-                                addTask();
-                                break;
-                            case 2:
-                                viewTasks();
-                                break;
-                            case 3:
-                                cout << "Exiting Task Manager. Goodbye!" << endl;
-                                break;
-                            default:
-                                cout << "Invalid choice. Please try again." << endl;
-                        }
-                        cout << endl;
-                    } while (userChoice != 3);
-                }
+                chooseUser();
                 break;
             case 4:
                 cout << "Exiting User Management. Goodbye!" << endl;
