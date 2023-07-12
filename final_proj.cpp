@@ -16,8 +16,7 @@ void profileMenu() {
     cout << "[1] Add user" << endl;
     cout << "[2] Display users" << endl; 
     cout << "[3] Choose user" << endl;
-    cout << "[4] Search user" << endl; // Optional or integrate it on choose user
-    cout << "[5] Exit" << endl; 
+    cout << "[4] Exit" << endl; 
     cout << "**********************************" << endl;
 }
 
@@ -100,13 +99,10 @@ int main()
         }
         case '3': {
             break;
-        }
-        case '4': {
-            break;
-        }
+        }   
 
     }   
-    } while(option != 5);
+    } while(option != 4);
     
     
     return 0;
