@@ -6,6 +6,7 @@
 #include <vector>
 #include <ctype.h>
 #include <algorithm>
+#include <limits>
 
 using namespace std;
 
@@ -15,7 +16,7 @@ private:
     bool completed;
 
 public:
-    Task(string t, string c, string d) : title(t), category(c), dueDate(d) {}
+    Task(string t, string c, string d) : title(t), category(c), dueDate(d), completed(false) {}
 
     string getTitle() const { return title; }
     string getCategory() const { return category; }
@@ -65,11 +66,9 @@ public:
             current = current->next;
             delete temp->task;
             delete temp;
-            count--;
-            pendingTaskCount--;
         }
     }
-    
+
     void addTask(Task* newTask) {
         Node* newNode = new Node;
         newNode->task = newTask;
@@ -85,10 +84,11 @@ public:
             current->next = newNode;
         }
         count++;
-        updateTaskStatus();
+
         if (!newTask->isCompleted() && !newTask->isExpired()) {
-        pendingTaskCount++; // Increment pendingTaskCount
+            pendingTaskCount++; // Increment pendingTaskCount
         }
+        updateTaskStatus();
     }
 
     void updateTaskStatus() {
@@ -100,12 +100,12 @@ public:
             Task* task = current->task;
             if (!task->isCompleted() && !task->isExpired()) {
                 pendingTaskCount++;
-            }
-            else if (task->isCompleted()) {
+            } else if (task->isCompleted()) {
                 completedTasks.push_back(task);
             }
             current = current->next;
         }
+        sortByDueDate(completedTasks);
     }
 
     void sortByDueDate(vector<Task*>& tasks) const{
@@ -115,35 +115,11 @@ public:
     }
 
     void displayTasks(const vector<Task*>& tasks) const {
-        vector<Task*> sortedTasks;
-        Node* current = head;
-        while (current != nullptr) {
-            Task* task = current->task;
-            sortedTasks.push_back(task);
-            current = current->next;
-        }
+        vector<Task*> sortedTasks = tasks; // Create a copy of the tasks vector
+        sortByDueDate(sortedTasks); // Sort the copy by due date
 
-        // Sort tasks by due date in descending order
-        sort(sortedTasks.begin(), sortedTasks.end(), [](Task* a, Task* b) {
-            return a->getDueDate() < b->getDueDate();
-        });
-
-        for (Task* task : tasks) {
-            // Normalize the due date format
-            string dueDate = task->getDueDate();
-            size_t firstSlashPos = dueDate.find('/');
-            size_t lastSlashPos = dueDate.rfind('/');
-            string normalizedDueDate = dueDate;
-            if (firstSlashPos != string::npos && lastSlashPos != string::npos && lastSlashPos - firstSlashPos == 2) {
-                if (firstSlashPos == 1) {
-                    normalizedDueDate.insert(0, "0");
-                }
-                if (lastSlashPos == 4) {
-                    normalizedDueDate.insert(3, "0");
-                }
-            }
-
-            cout << "[" << normalizedDueDate << "] - " << task->getTitle() << endl;
+        for (Task* task : sortedTasks) {
+            cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
         }
     }
 
@@ -161,8 +137,8 @@ public:
             Task* removedTask = temp->task;
             delete temp;
             count--;
-            updateTaskStatus(); // Update pendingTaskCount
             return removedTask;
+            updateTaskStatus(); // Update pendingTaskCount
         }
 
         Node* current = head->next;
@@ -267,9 +243,20 @@ int getUserChoice() {
     }
 }
 
+string getCurrentDate() {
+    time_t now = time(nullptr);
+    tm* localTime = localtime(&now);
+
+    int currentYear = localTime->tm_year % 100;
+    int currentMonth = localTime->tm_mon + 1;
+    int currentDay = localTime->tm_mday;
+
+    string currentDate = to_string(currentMonth) + "/" + to_string(currentDay) + "/" + to_string(currentYear);
+    return currentDate;
+}
+
 void createTask(LinkedList& tasks) {
     string title, category, dueDate;
-    tasks.pendingTaskCount++;
 
     cout << "Enter task title: ";
     getline(cin, title);
@@ -280,19 +267,28 @@ void createTask(LinkedList& tasks) {
     cout << "Enter due date (MM/DD/YY): ";
     getline(cin, dueDate);
 
-    if (!isValidDate(dueDate)) {
-        cout << "Invalid date format. Task not created." << endl;
-        return;
-    }
+    string currentDate = getCurrentDate();
+    cout << "Current Date: " << currentDate << endl;
 
-    if (isDatePassed(dueDate)) {
-        cout << "The due date has already passed. Task not created." << endl;
-        return;
-    }
+    bool validDate = false;
+    while (!validDate) {
+        cout << "[MM/DD/YY] Due date: ";
+        getline(cin, dueDate);
+        if (!isValidDate(dueDate)) {
+            cout << "Date not valid. Please enter a date in the format MM/DD/YY." << endl;
+        } else if (isDatePassed(dueDate)) {
+            cout << "Date not valid. The date has passed the current date." << endl;
+            cout << "Current Date: " << currentDate << endl;
+        } else {
+            validDate = true;  // Set validDate to true
+        }
 
-    Task* newTask = new Task(title, category, dueDate);
-    tasks.addTask(newTask);
-    cout << "Task created successfully!" << endl;
+        if (validDate) {  // Add the task only when validDate is true
+            Task* newTask = new Task(title, category, dueDate);
+            tasks.addTask(newTask);
+            cout << "Task added successfully!" << endl;
+        }
+    }
 }
 
 vector<Task*> searchTasks(const LinkedList& tasks, int searchChoice, const string& searchTerm) {
@@ -343,9 +339,7 @@ void searchTask(const LinkedList& tasks) {
             vector<Task*> matchingTasks = searchTasks(tasks, 1, title);
             if (!matchingTasks.empty()) {
                 cout << "Task/s found:" << endl;
-                for (Task* task : matchingTasks) {
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
-                }
+                tasks.displayTasks(matchingTasks);
             } else {
                 cout << "Task/s not found." << endl;
             }
@@ -359,9 +353,7 @@ void searchTask(const LinkedList& tasks) {
             vector<Task*> matchingTasks = searchTasks(tasks, 2, category);
             if (!matchingTasks.empty()) {
                 cout << "Task/s found:" << endl;
-                for (Task* task : matchingTasks) {
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
-                }
+                tasks.displayTasks(matchingTasks);
             } else {
                 cout << "Task/s not found." << endl;
             }
@@ -375,9 +367,7 @@ void searchTask(const LinkedList& tasks) {
             vector<Task*> matchingTasks = searchTasks(tasks, 3, date);
             if (!matchingTasks.empty()) {
                 cout << "Task/s found:" << endl;
-                for (Task* task : matchingTasks) {
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
-                }
+                tasks.displayTasks(matchingTasks);
             } else {
                 cout << "Task/s not found." << endl;
             }
@@ -411,25 +401,11 @@ void updateTask(LinkedList& tasks) {
             string title;
             getline(cin, title);
 
-            LinkedList::Node* current = tasks.head;
-            bool found = false;
-            while (current != nullptr) {
-                Task* task = current->task;
-                if (task->getTitle() == title) {
-                    if (!found) {
-                        cout << "Task/s found:" << endl;
-                        cout << task->getTitle() << ":" << endl;
-                        found = true;
-                    }
-                    cout << task->getCategory() << ":" << endl;
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
-                }
-                current = current->next;
-            }
+            vector<Task*> matchingTasks = searchTasks(tasks, 1, title);
+            if (!matchingTasks.empty()) {
+                cout << "Task/s found:" << endl;
+                tasks.displayTasks(matchingTasks);
 
-            if (!found) {
-                cout << "Task/s not found." << endl;
-            } else {
                 cout << "1. Mark all completed" << endl;
                 cout << "2. Delete all" << endl;
                 cout << "3. Back" << endl;
@@ -440,55 +416,32 @@ void updateTask(LinkedList& tasks) {
 
                 switch (updateChoice) {
                     case 1: {
-                        LinkedList::Node* current = tasks.head;
-                        while (current != nullptr) {
-                            Task* task = current->task;
-                            if (task->getTitle() == title && !task->isCompleted()) {
+                        for (Task* task : matchingTasks) {
+                            if (!task->isCompleted()) {
                                 task->setCompleted(true);
-                                tasks.removeTask(task);
+                                tasks.updateTaskStatus();
                             }
-                            current = current->next;
                         }
-                        cout << "All tasks with the title \"" << title << "\" marked as completed!" << endl;
+                        cout << "All matching tasks marked as completed and moved to the completed tasks list." << endl;
                         break;
                     }
                     case 2: {
-                        LinkedList::Node* current = tasks.head;
-                        LinkedList::Node* prev = nullptr;
-                        int deletedCount = 0;
-                        cout << "This action cannot be undone. Do you want to continue? [Y/N] ";
-                        char confirm;
-                        cin >> confirm;
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                        
-                        if (confirm == 'Y' || confirm == 'y') {
-                            cout << "Deleting all tasks..." << endl;
-                            current = tasks.head;
-                            while (current != nullptr) {
-                                Task* task = current->task;
-                                if (task->getTitle() == title) {
-                                    if (prev == nullptr) {
-                                        tasks.head = current->next;
-                                    } else {
-                                        prev->next = current->next;
-                                    }
-                                    delete current->task;
-                                    delete current;
-                                    current = prev != nullptr ? prev->next : tasks.head;
-                                    tasks.count--;
-                                    deletedCount++;
-                                } else {
-                                    prev = current;
-                                    current = current->next;
-                                }
-                            break;
-                            }
+                        for (Task* task : matchingTasks) {
+                            tasks.removeTask(task);
                         }
-                        cout << "Deleted " << deletedCount << " tasks with the title \"" << title << "\"!" << endl;
+                        cout << "All matching tasks deleted." << endl;
                         break;
                     }
+                    case 3:
+                        // Go back to the main menu
+                        break;
+                    default:
+                        cout << "Invalid choice. Please try again." << endl;
+                        break;
                 }
                 tasks.updateTaskStatus();
+            } else {
+                cout << "Task/s not found." << endl;
             }
             break;
         }
@@ -612,6 +565,8 @@ void updateTask(LinkedList& tasks) {
                             Task* task = current->task;
                             if (task->getDueDate() == date && !task->isCompleted()) {
                                 task->setCompleted(true);
+                                tasks.completedTasks.push_back(task);
+                                tasks.removeTask(task);
                             }
                             current = current->next;
                         }
@@ -663,81 +618,71 @@ void updateTask(LinkedList& tasks) {
 }
 
 void viewTasks(const LinkedList& tasks) {
-    LinkedList::Node* current = tasks.head;
-    bool foundPendingTasks = false;
-    bool foundCompletedTasks = false;
-    bool foundExpiredTasks = false;
-    int pendingTaskCount = 0;
-
-    vector<Task*> matchingTasks;
-
-    int viewChoice;
     cout << "1. View Pending Tasks" << endl;
     cout << "2. View Completed Tasks" << endl;
     cout << "3. View Expired Tasks" << endl;
     cout << "Your choice: ";
+    int viewChoice;
     cin >> viewChoice;
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     switch (viewChoice) {
-        case 1:
-            matchingTasks = searchTasks(tasks, 3, "");
-            if (!matchingTasks.empty()) {
-                cout << "Pending Tasks:" << endl;
-                for (Task* task : matchingTasks) {
-                    if (!task->isCompleted()) {
-                        cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
-                        foundPendingTasks = true;
+        case 1: {
+            cout << "Pending Tasks:" << endl;
+            LinkedList::Node* current = tasks.head;
+            bool found = false;
+            while (current != nullptr) {
+                Task* task = current->task;
+                if (!task->isCompleted() && !task->isExpired()) {
+                    if (!found) {
+                        found = true;
                     }
-                }
-                if (!foundPendingTasks) {
-                    cout << "No pending tasks found." << endl;
-                }
-            } else {
-                cout << "No pending tasks found." << endl;
-            }
-            break;
-        case 2:{
-            vector<Task*> completedTasks = tasks.getCompletedTasks();
-            if (!completedTasks.empty()) {
-                cout << "Completed Tasks:" << endl;
-                for (Task* task : completedTasks) {
                     cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
                 }
-            } else {
-                cout << "No completed tasks found." << endl;
+                current = current->next;
+            }
+
+            if (!found) {
+                cout << "No pending tasks." << endl;
             }
             break;
         }
-        case 3:
-            matchingTasks = searchTasks(tasks, 3, "");
-            if (!matchingTasks.empty()) {
-                cout << "Expired Tasks:" << endl;
-                for (Task* task : matchingTasks) {
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
-                }
+        case 2: {
+            cout << "Completed Tasks:" << endl;
+            vector<Task*> completedTasks = tasks.getCompletedTasks();
+            if (completedTasks.empty()) {
+                cout << "No completed tasks." << endl;
             } else {
-                cout << "No expired tasks found." << endl;
+                tasks.displayTasks(completedTasks);
             }
             break;
+        }
+        case 3: {
+            cout << "Expired Tasks:" << endl;
+            LinkedList::Node* current = tasks.head;
+            bool found = false;
+            while (current != nullptr) {
+                Task* task = current->task;
+                if (!task->isCompleted() && task->isExpired()) {
+                    if (!found) {
+                        found = true;
+                    }
+                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
+                }
+                current = current->next;
+            }
+
+            if (!found) {
+                cout << "No expired tasks." << endl;
+            }
+            break;
+        }
         default:
             cout << "Invalid choice. Please try again." << endl;
             break;
     }
-
 }
 
-string getCurrentDate() {
-    time_t now = time(nullptr);
-    tm* localTime = localtime(&now);
-
-    int currentYear = localTime->tm_year % 100;
-    int currentMonth = localTime->tm_mon + 1;
-    int currentDay = localTime->tm_mday;
-
-    string currentDate = to_string(currentMonth) + "/" + to_string(currentDay) + "/" + to_string(currentYear);
-    return currentDate;
-}
 
 void about() {
     cout << "Task Manager v1.0" << endl;
