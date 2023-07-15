@@ -269,12 +269,9 @@ void createTask(LinkedList& tasks) {
     string currentDate = getCurrentDate();
     cout << "Current Date: " << currentDate << endl;
 
-    cout << "Enter due date (MM/DD/YY): ";
-    getline(cin, dueDate);
-
     bool validDate = false;
     while (!validDate) {
-        cout << "[MM/DD/YY] Due date: ";
+        cout << "Enter due date [MM/DD/YY]: ";
         getline(cin, dueDate);
         if (!isValidDate(dueDate)) {
             cout << "Date not valid. Please enter a date in the format MM/DD/YY." << endl;
