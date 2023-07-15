@@ -236,6 +236,8 @@ int getUserChoice() {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cout << "Invalid input. Please enter a valid integer." << endl;
+        } else if (choice < 1 || choice > 6) {
+            cout << "Invalid choice. Please enter a number between 1 and 6." << endl;
         } else {
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             return choice;
@@ -264,11 +266,11 @@ void createTask(LinkedList& tasks) {
     cout << "Enter task category: ";
     getline(cin, category);
 
-    cout << "Enter due date (MM/DD/YY): ";
-    getline(cin, dueDate);
-
     string currentDate = getCurrentDate();
     cout << "Current Date: " << currentDate << endl;
+
+    cout << "Enter due date (MM/DD/YY): ";
+    getline(cin, dueDate);
 
     bool validDate = false;
     while (!validDate) {
