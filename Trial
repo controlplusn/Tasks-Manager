@@ -1,15 +1,18 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>  
+#include <sstream>
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <ctime>
+#include <iomanip>
 
 using namespace std;
 
 struct Task {
     string name;
     string description;
+    time_t dueDate; // Add a due date field using time_t data type
 };
 
 struct User {
@@ -33,6 +36,7 @@ void saveTasksToFile(const string& filename) {
         for (const auto& task : user.tasks) {
             outputFile << "Task: " << task.name << endl;
             outputFile << "Task Description: " << task.description << endl;
+            outputFile << "Due Date: " << task.dueDate << endl; // Save the due date as well
             outputFile << "-----------------------" << endl;
         }
     }
@@ -86,10 +90,22 @@ bool loginUser() {
 void addTask() {
     Task newTask;
     cout << "Enter task name: ";
-    cin >> newTask.name;
-    cout << "Enter task description: ";
     cin.ignore();
+    getline(cin, newTask.name);
+    cout << "Enter task description: ";
     getline(cin, newTask.description);
+    cout << "Enter due date (MM/DD/YYYY HH:MM AM/PM): ";
+    string dueDateStr;
+    getline(cin, dueDateStr);
+
+    // Parse the due date string using std::istringstream
+    istringstream ss(dueDateStr);
+    tm tm = {};
+    ss >> get_time(&tm, "%m/%d/%Y %I:%M %p");
+
+    // Convert std::tm to time_t
+    newTask.dueDate = std::mktime(&tm);
+
     users.back().tasks.push_back(newTask);
     cout << "Task added successfully!" << endl;
 }
@@ -104,6 +120,7 @@ void viewTasks() {
             cout << "Task " << taskNumber << ":" << endl;
             cout << "Name: " << task.name << endl;
             cout << "Description: " << task.description << endl;
+            cout << "Due Date: " << asctime(localtime(&task.dueDate)); // Convert and display the due date as a string
             cout << "-----------------------" << endl;
             taskNumber++;
         }
@@ -121,6 +138,7 @@ bool deleteTask() {
             cout << "Task " << taskNumber << ":" << endl;
             cout << "Name: " << task.name << endl;
             cout << "Description: " << task.description << endl;
+            cout << "Due Date: " << asctime(localtime(&task.dueDate)); // Convert and display the due date as a string
             cout << "-----------------------" << endl;
             taskNumber++;
         }
@@ -143,6 +161,27 @@ bool deleteTask() {
     }
 }
 
+void checkTaskReminders() {
+    time_t currentTime = time(nullptr);
+    struct tm* localTime = localtime(&currentTime);
+
+    cout << "========= Task Reminders =========" << endl;
+
+    for (const auto& user : users) {
+        for (const auto& task : user.tasks) {
+            struct tm* taskDueDate = localtime(&task.dueDate);
+            if (localTime->tm_year == taskDueDate->tm_year && localTime->tm_mon == taskDueDate->tm_mon &&
+                localTime->tm_mday == taskDueDate->tm_mday && localTime->tm_hour == taskDueDate->tm_hour &&
+                localTime->tm_min == taskDueDate->tm_min) {
+                cout << "Task Name: " << task.name << endl;
+                cout << "Description: " << task.description << endl;
+                cout << "Due Date: " << asctime(taskDueDate);
+                cout << "----------------------------------" << endl;
+            }
+        }
+    }
+}
+
 void chooseUser() {
     if (loginUser()) {
         int userChoice;
@@ -153,7 +192,8 @@ void chooseUser() {
             cout << "3. Delete Task" << endl;
             cout << "4. Save Tasks to File" << endl;
             cout << "5. Load Tasks from File" << endl;
-            cout << "6. Exit" << endl;
+            cout << "6. Check Task Reminders" << endl; // New option to check task reminders
+            cout << "7. Exit" << endl;
             cout << "Enter your choice: ";
             cin >> userChoice;
             switch (userChoice) {
@@ -183,13 +223,16 @@ void chooseUser() {
                     break;
                 }
                 case 6:
+                    checkTaskReminders(); // Call the new function to check task reminders
+                    break;
+                case 7:
                     cout << "Exiting Task Manager. Goodbye!" << endl;
                     break;
                 default:
                     cout << "Invalid choice. Please try again." << endl;
             }
             cout << endl;
-        } while (userChoice != 6);
+        } while (userChoice != 7);
     }
 }
 
@@ -201,7 +244,8 @@ int main() {
         cout << "1. Add User" << endl;
         cout << "2. Display Users" << endl;
         cout << "3. Choose User" << endl;
-        cout << "4. Exit" << endl;
+        cout << "4. Parse Due Date" << endl; // Added option for parsing a due date
+        cout << "5. Exit" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -215,7 +259,29 @@ int main() {
             case 3:
                 chooseUser();
                 break;
-            case 4:
+            case 4: {
+                std::string dueDateStr;
+
+                cout << "Enter the due date string (MM/DD/YYYY HH:MM AM/PM): ";
+                cin.ignore();
+                getline(cin, dueDateStr);
+
+                // Parse and display the due date
+                istringstream ss(dueDateStr);
+                tm tm = {};
+                ss >> std::get_time(&tm, "%m/%d/%Y %I:%M %p");
+                if (ss.fail()) {
+                    cout << "Failed to parse due date." << endl;
+                } else {
+                    cout << "Year: " << tm.tm_year + 1900 << endl;
+                    cout << "Month: " << tm.tm_mon + 1 << endl;
+                    cout << "Day: " << tm.tm_mday << endl;
+                    cout << "Hour: " << tm.tm_hour << endl;
+                    cout << "Minute: " << tm.tm_min << endl;
+                }
+                break;
+            }
+            case 5:
                 cout << "Exiting User Management. Goodbye!" << endl;
                 break;
             default:
@@ -223,7 +289,7 @@ int main() {
         }
 
         cout << endl;
-    } while (choice != 4);
+    } while (choice != 5);
 
     return 0;
 }
