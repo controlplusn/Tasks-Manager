@@ -473,23 +473,23 @@ void MainTask() {
                 system("cls");
                 viewTasks(tasks);
                 break;
-            case 5:
+            case 5: 
+                system("cls");
+                tasks.checkTaskReminders();
+                break;
+            case 6:
                 system("cls");
                 about();
                 break;
-            case 6:
+            case 7:
                 cout << "Exiting... Thank you!" << endl;
-                break;
-            case 7: 
-                system("cls");
-                tasks.checkTaskReminders();
                 break;
             default:
                 cout << "Invalid choice. Please try again." << endl;
                 break;
         }
         cout << endl;
-    } while (choice != 6);
+    } while (choice != 7);
 
         // Save tasks to a file
     tasks.saveTasksToFile("tasks.txt");
@@ -501,8 +501,9 @@ void displayMenu(int pendingTaskCount) {
     cout << "2. Search tasks" << endl;
     cout << "3. Update tasks" << endl;
     cout << "4. View tasks [" << pendingTaskCount << "]" << endl;
-    cout << "5. About" << endl;
-    cout << "6. Exit" << endl;
+    cout << "5. Check Task Reminders" << endl;
+    cout << "6. About" << endl;
+    cout << "7. Exit" << endl;
     cout << "===============================" << endl;
     cout << "Your choice: ";
 }
