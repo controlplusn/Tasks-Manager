@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>  // Include the <sstream> header
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -17,6 +19,27 @@ struct User {
 };
 
 vector<User> users;
+
+// Function to save tasks to a file
+void saveTasksToFile(const string& filename) {
+    ofstream outputFile(filename);
+
+    if (!outputFile) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    for (const auto& user : users) {
+        for (const auto& task : user.tasks) {
+            outputFile << "Task: " << task.name << endl;
+            outputFile << "Task Description: " << task.description << endl;
+            outputFile << "-----------------------" << endl;
+        }
+    }
+
+    outputFile.close();
+    cout << "Tasks saved to file successfully!" << endl;
+}
 
 void addUser() {
     User newUser;
@@ -128,7 +151,9 @@ void chooseUser() {
             cout << "1. Add Task" << endl;
             cout << "2. View Tasks" << endl;
             cout << "3. Delete Task" << endl;
-            cout << "4. Exit" << endl;
+            cout << "4. Save Tasks to File" << endl;
+            cout << "5. Load Tasks from File" << endl;
+            cout << "6. Exit" << endl;
             cout << "Enter your choice: ";
             cin >> userChoice;
             switch (userChoice) {
@@ -141,14 +166,30 @@ void chooseUser() {
                 case 3:
                     deleteTask();
                     break;
-                case 4:
+                case 4: {
+                    string filename;
+                    cout << "Enter the filename to save tasks: ";
+                    cin.ignore();
+                    getline(cin, filename);
+                    saveTasksToFile(filename);
+                    break;
+                }
+                case 5: {
+                    string filename;
+                    cout << "Enter the filename to load tasks: ";
+                    cin.ignore();
+                    getline(cin, filename);
+                    // Implement the function to load tasks from file
+                    break;
+                }
+                case 6:
                     cout << "Exiting Task Manager. Goodbye!" << endl;
                     break;
                 default:
                     cout << "Invalid choice. Please try again." << endl;
             }
             cout << endl;
-        } while (userChoice != 4);
+        } while (userChoice != 6);
     }
 }
 
