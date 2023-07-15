@@ -34,7 +34,7 @@ and understanding of fundamental data structures in computer science.
 7. Task Deletion:
    - Users can delete tasks they no longer need.
    
-8. Task Reminders (Optional):
+8. Task Reminders:
    - Provide reminders for upcoming task deadlines.
    - Reminders can be in the form of visual notifications or email notifications.
    
@@ -65,7 +65,7 @@ and understanding of fundamental data structures in computer science.
 
    CS - 1301
  - Abril, Danielle Ziac
- -  Evangelista, Aeron
+ - Evangelista, Aeron
  - Medina, Carle Francis
 
 ## Course Information
