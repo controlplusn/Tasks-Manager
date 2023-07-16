@@ -98,23 +98,48 @@ void addTask() {
     cin.ignore();
     getline(cin, newTask.name);
 
-    cout << "Do you want to add a description? (Y/N): ";
     string addDescriptionChoice;
-    getline(cin, addDescriptionChoice);
+    bool validChoice = false;
 
-    if (addDescriptionChoice == "Y" || addDescriptionChoice == "y") {
-        cout << "Enter task description: ";
-        getline(cin, newTask.description);
+    while (!validChoice) {
+        cout << "Do you want to add a description? (Y/N): ";
+        getline(cin, addDescriptionChoice);
+
+        if (addDescriptionChoice == "Y" || addDescriptionChoice == "y") {
+            cout << "Enter task description: ";
+            getline(cin, newTask.description);
+            validChoice = true;
+        } else if (addDescriptionChoice == "N" || addDescriptionChoice == "n") {
+            validChoice = true;
+        } else {
+            cout << "Invalid choice. Please enter 'Y' for Yes or 'N' for No." << endl;
+        }
     }
 
-    cout << "Enter due date (MM/DD/YYYY HH:MM AM/PM): ";
     string dueDateStr;
-    getline(cin, dueDateStr);
+    bool validDueDate = false;
 
-    istringstream ss(dueDateStr);
-    tm tm = {};
-    ss >> get_time(&tm, "%m/%d/%Y %I:%M %p");
-    newTask.dueDate = std::mktime(&tm);
+    while (!validDueDate) {
+        cout << "Enter due date (MM/DD/YYYY HH:MM AM/PM): ";
+        getline(cin, dueDateStr);
+
+        istringstream ss(dueDateStr);
+        tm tm = {};
+        ss >> get_time(&tm, "%m/%d/%Y %I:%M %p");
+
+        if (ss.fail()) {
+            cout << "Invalid due date format. Please try again." << endl;
+        } else {
+            // Validate if the entire input was consumed
+            char remaining;
+            if (ss >> remaining) {
+                cout << "Invalid due date format. Please enter the complete date and time." << endl;
+            } else {
+                newTask.dueDate = std::mktime(&tm);
+                validDueDate = true;
+            }
+        }
+    }
 
     loggedInUser->tasks.push_back(newTask);
     cout << "Task added successfully!" << endl;
