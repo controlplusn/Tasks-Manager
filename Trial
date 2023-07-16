@@ -324,7 +324,6 @@ public:
     bool isEmpty() const { return count == 0; }
 };
 
-
 // Function Prototype
 int choice(int);
 string get_hidden();
@@ -332,8 +331,8 @@ void MainTask();
 void displayMenu(int pendingTaskCount);
 int getUserChoice();
 void createTask(LinkedList& tasks);
-bool isValidDate(const string& date);
-bool isDatePassed(const string& date);
+bool isValidDate(int month, int day, int year);
+bool isDatePassed(int year, int month, int day, int hour, int min);
 string getCurrentDate();
 vector<Task*> searchTasks(const LinkedList& tasks, int searchChoice, const string& searchTerm);
 void searchTask(const LinkedList& tasks);
@@ -341,6 +340,75 @@ void updateTask(LinkedList& tasks);
 void viewTasks(const LinkedList& tasks);
 void about();
 
+//// Function Prototype
+//int choice(int);
+//string get_hidden();
+//void MainTask();
+//void displayMenu(int pendingTaskCount);
+//int getUserChoice();
+//void createTask(LinkedList& tasks);
+//bool isValidDate(int month, int day, int year) {
+//    // Validate the month
+//    if (month < 1 || month > 12) {
+//        return false;
+//    }
+//
+//    // Validate the day
+//    if (day < 1 || day > 31) {
+//        return false;
+//    }
+//
+//    // Validate the year
+//    if (year < 0) {
+//        return false;
+//    }
+//
+//    // Validate specific months and their corresponding days
+//    if (month == 4 || month == 6 || month == 9 || month == 11) {
+//        if (day > 30) {
+//            return false;
+//        }
+//    } else if (month == 2) {
+//        bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+//        if (isLeapYear) {
+//            if (day > 29) {
+//                return false;
+//            }
+//        } else {
+//            if (day > 28) {
+//                return false;
+//            }
+//        }
+//    }
+//
+//    return true;
+//}
+//bool isDatePassed(int year, int month, int day, int hour, int min) {
+//    // Get the current date and time
+//    time_t now = time(nullptr);
+//    tm* localTime = localtime(&now);
+//    int currentYear = localTime->tm_year % 100;
+//    int currentMonth = localTime->tm_mon + 1;
+//    int currentDay = localTime->tm_mday;
+//    int currentHour = localTime->tm_hour;
+//    int currentMin = localTime->tm_min;
+//
+//    // Compare the due date and time with the current date and time
+//    if (year < currentYear || month < currentMonth || day < currentDay ||
+//        (day == currentDay && hour < currentHour) ||
+//        (day == currentDay && hour == currentHour && min <= currentMin)) {
+//        return true;  // Date has passed
+//    }
+//
+//    return false;  // Date has not passed
+//}
+//string getCurrentDate();
+//vector<Task*> searchTasks(const LinkedList& tasks, int searchChoice, const string& searchTerm);
+//void searchTask(const LinkedList& tasks);
+//void updateTask(LinkedList& tasks);
+//void viewTasks(const LinkedList& tasks);
+//void about();
+//
 
 int main() {
     AccountManager acc_manager;
@@ -477,11 +545,19 @@ void MainTask() {
                 system("cls");
                 tasks.checkTaskReminders();
                 break;
-            case 6:
+            case 6: 
+                system("cls");
+                tasks.saveTasksToFile("tasks.txt");
+                break;
+            case 7: 
+                system("cls");
+                tasks.loadTasksFromFile("tasks.txt");
+                break;
+            case 8:
                 system("cls");
                 about();
                 break;
-            case 7:
+            case 9:
                 cout << "Exiting... Thank you!" << endl;
                 break;
             default:
@@ -489,9 +565,9 @@ void MainTask() {
                 break;
         }
         cout << endl;
-    } while (choice != 7);
+    } while (choice != 9);
 
-        // Save tasks to a file
+    // Save tasks to a file
     tasks.saveTasksToFile("tasks.txt");
 }
 
@@ -502,8 +578,10 @@ void displayMenu(int pendingTaskCount) {
     cout << "3. Update tasks" << endl;
     cout << "4. View tasks [" << pendingTaskCount << "]" << endl;
     cout << "5. Check Task Reminders" << endl;
-    cout << "6. About" << endl;
-    cout << "7. Exit" << endl;
+    cout << "6. Save Tasks To File" << endl;
+    cout << "7. Load Tasks From File" << endl;
+    cout << "8. About" << endl;
+    cout << "8. EXIT" << endl;
     cout << "===============================" << endl;
     cout << "Your choice: ";
 }
@@ -526,16 +604,30 @@ int getUserChoice() {
     }
 }
 
-string getCurrentDate() {
+string getCurrentDateTime() {
     time_t now = time(nullptr);
     tm* localTime = localtime(&now);
 
     int currentYear = localTime->tm_year % 100;
     int currentMonth = localTime->tm_mon + 1;
     int currentDay = localTime->tm_mday;
+    int currentHour = localTime->tm_hour;
+    int currentMin = localTime->tm_min;
 
-    string currentDate = to_string(currentMonth) + "/" + to_string(currentDay) + "/" + to_string(currentYear);
-    return currentDate;
+    // Determine AM or PM
+    string period = (currentHour < 12) ? "AM" : "PM";
+
+    // Convert to 12-hour format
+    if (currentHour > 12) {
+        currentHour -= 12;
+    } else if (currentHour == 0) {
+        currentHour = 12;
+    }
+
+    string currentDateTime = to_string(currentMonth) + "/" + to_string(currentDay) + "/" + to_string(currentYear) +
+                             " " + to_string(currentHour) + ":" + to_string(currentMin) + " " + period;
+
+    return currentDateTime;
 }
 
 void createTask(LinkedList& tasks) {
@@ -547,28 +639,54 @@ void createTask(LinkedList& tasks) {
     cout << "Enter task category: ";
     getline(cin, category);
 
-    string currentDate = getCurrentDate();
-    cout << "Current Date: " << currentDate << endl;
+    string currentDateTime = getCurrentDateTime();
+    cout << "Current Date and Time: " << currentDateTime << endl;
 
     bool validDate = false;
-    while (!validDate) {
-        cout << "[MM/DD/YY] Due date: ";
+    do {
+        cout << "[MM/DD/YY HH:MM AM/PM] Due date and time: ";
         getline(cin, dueDate);
-        if (!isValidDate(dueDate)) {
-            cout << "Date not valid. Please enter a date in the format MM/DD/YY." << endl;
-        } else if (isDatePassed(dueDate)) {
-            cout << "Date not valid. The date has passed the current date." << endl;
-            cout << "Current Date: " << currentDate << endl;
-        } else {
-            validDate = true;  // Set validDate to true
-        }
 
-        if (validDate) {  // Add the task only when validDate is true
-            Task* newTask = new Task(title, category, dueDate);
-            tasks.addTask(newTask);
-            cout << "Task added successfully!" << endl;
+        // Extract date and time components
+        int month, day, year, hour, min;
+        char delimiter;
+        string ampm;
+        istringstream iss(dueDate);
+        if (iss >> month >> delimiter >> day >> delimiter >> year >> hour >> delimiter >> min >> ampm) {
+            // Validate the components
+            if (isValidDate(month, day, year) && hour >= 0 && hour <= 23 && min >= 0 && min <= 59) {
+                // Convert to 24-hour format if necessary
+                if (ampm == "PM" || ampm == "pm") {
+                    if (hour != 12) {
+                        hour += 12;
+                    }
+                } else if (ampm == "AM" || ampm == "am") {
+                    if (hour == 12) {
+                        hour = 0;
+                    }
+                } else {
+                    cout << "Invalid AM/PM format. Please enter AM or PM." << endl;
+                    continue;
+                }
+
+                // Check if the date has passed the current date and time
+                if (isDatePassed(year, month, day, hour, min)) {
+                    cout << "Date not valid. The date has passed the current date and time." << endl;
+                    cout << "Current Date and Time: " << currentDateTime << endl;
+                } else {
+                    validDate = true;  // Set validDate to true
+
+                    Task* newTask = new Task(title, category, dueDate);
+                    tasks.addTask(newTask);
+                    cout << "Task added successfully!" << endl;
+                }
+            } else {
+                cout << "Invalid date or time format. Please enter a valid date and time in the format MM/DD/YY HH:MM AM/PM." << endl;
+            }
+        } else {
+            cout << "Invalid date or time format. Please enter a valid date and time in the format MM/DD/YY HH:MM AM/PM." << endl;
         }
-    }
+    } while (!validDate);
 }
 
 vector<Task*> searchTasks(const LinkedList& tasks, int searchChoice, const string& searchTerm) {
@@ -990,10 +1108,45 @@ void about() {
 
 // DATE AND TIME VALIDATION
 bool isValidDate(const string& date) {
-    istringstream iss(date);
-    int month, day, year;
-    char delimiter;
-    return (iss >> month >> delimiter >> day >> delimiter >> year) ? true : false;
+    // Validate the format of the date (MM/DD/YY)
+    if (date.length() != 8 || date[2] != '/' || date[5] != '/') {
+        return false;
+    }
+
+    // Extract the month, day, and year from the date string
+    int month = stoi(date.substr(0, 2));
+    int day = stoi(date.substr(3, 2));
+    int year = stoi(date.substr(6, 2));
+
+    // Validate the month
+    if (month < 1 || month > 12) {
+        return false;
+    }
+
+    // Validate the day based on the month
+    if (day < 1 || day > 31) {
+        return false;
+    }
+
+    // Validate the year
+    if (year < 0) {
+        return false;
+    }
+
+    // Validate specific month-day combinations
+    if (month == 2) {
+        // Check for leap year (February 29)
+        bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+        if (day > 29 || (day == 29 && !isLeapYear)) {
+            return false;
+        }
+    } else if (month == 4 || month == 6 || month == 9 || month == 11) {
+        // Months with 30 days
+        if (day > 30) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool isDatePassed(const string& date) {
