@@ -113,15 +113,48 @@ public:
             return a->getDueDate() < b->getDueDate();
         });
     }
+    void printLine(const string& text, int maxLength) const{
+        cout << "| " << text;
+        int padding = maxLength - text.length();
+        cout << string(padding, ' ') << " |" << endl;
+    }
+
+    void printTopBorder(const string& title, int length) const{
+        int titleLength = title.length();
+        int sideLength = (length - titleLength - 2) / 2; 
+        string border(sideLength, '=');
+        cout << border << " [" << title << "] " << border << endl;
+    }
+
+    void printBottomBorder(int length) const{
+        string border(length, '=');
+        cout << border << endl;
+    }
 
     void displayTasks(const vector<Task*>& tasks) const {
         vector<Task*> sortedTasks = tasks; // Create a copy of the tasks vector
         sortByDueDate(sortedTasks); // Sort the copy by due date
+        
+        int maxTitleLength = 0;
+        int maxCategoryLength = 0;
+        int maxDueDateLength = 0;
 
         for (Task* task : sortedTasks) {
-            cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
+            maxTitleLength = max(maxTitleLength, static_cast<int>(task->getTitle().length()));
+            maxDueDateLength = max(maxDueDateLength, static_cast<int>(task->getDueDate().length()));
+            maxCategoryLength = max(maxCategoryLength, static_cast<int>(task->getCategory().length()));
         }
-    }
+        int maxLength = max(maxTitleLength + maxDueDateLength + 6, maxCategoryLength + 2);    printTopBorder("TASKS", maxLength + 2);
+
+        for (Task* task : sortedTasks) {
+            string category = task->getCategory();
+            string title = task->getTitle();
+            string dueDate = task->getDueDate();
+            printLine(category + ": ", maxLength);
+            printLine("[" + dueDate + "] - " + title, maxLength);
+        }
+        printBottomBorder(maxLength + 4);
+        }
 
     vector<Task*> getCompletedTasks() const {
         return completedTasks;
@@ -158,14 +191,30 @@ public:
 
         return nullptr;
     }
-
     int getCount() const { return count; }
 
     bool isEmpty() const { return count == 0; }
 };
 
+void displayMenu(int pendingTaskCount) {
+        LinkedList l;
+        int maxLength = 30;
+
+        l.printTopBorder("MENU", maxLength + 2);
+        l.printLine("1. Create a new list", maxLength);
+        l.printLine("2. Search tasks", maxLength);
+        l.printLine("3. Update tasks", maxLength);
+        l.printLine("4. View tasks [" + to_string(pendingTaskCount) + "]", maxLength);
+        l.printLine("5. About", maxLength);
+        l.printLine("6. Check Reminders", maxLength);
+        l.printLine("7. Log out", maxLength);
+
+        l.printBottomBorder(maxLength + 4);
+        cout << "Your choice: ";
+}
+
+
 // Function prototypes
-void displayMenu(int pendingTaskCount);
 int getUserChoice();
 void createTask(LinkedList& tasks);
 vector<Task*> searchTasks(const LinkedList& tasks, int searchChoice, const string& searchTerm);
@@ -215,18 +264,6 @@ int main() {
     return 0;
 }
 
-void displayMenu(int pendingTaskCount) {
-    cout << "========= Task Manager =========" << endl;
-    cout << "1. Create a new task" << endl;
-    cout << "2. Search tasks" << endl;
-    cout << "3. Update tasks" << endl;
-    cout << "4. View tasks [" << pendingTaskCount << "]" << endl;
-    cout << "5. About" << endl;
-    cout << "6. Exit" << endl;
-    cout << "===============================" << endl;
-    cout << "Your choice: ";
-}
-
 int getUserChoice() {
     int choice;
     while (true) {
@@ -258,6 +295,7 @@ string getCurrentDate() {
 }
 
 void createTask(LinkedList& tasks) {
+    LinkedList l;
     string title, category, dueDate;
 
     cout << "Enter task title: ";
@@ -285,6 +323,20 @@ void createTask(LinkedList& tasks) {
         if (validDate) {  // Add the task only when validDate is true
             Task* newTask = new Task(title, category, dueDate);
             tasks.addTask(newTask);
+            int maxTitleLength = 0;
+            int maxCategoryLength = 0;
+            int maxDueDateLength = 0;
+
+            maxTitleLength = max(maxTitleLength, static_cast<int>(title.length()));
+            maxDueDateLength = max(maxDueDateLength, static_cast<int>(dueDate.length()));
+            maxCategoryLength = max(maxCategoryLength, static_cast<int>(category.length()));
+
+            
+            int maxLength = max(maxTitleLength + maxDueDateLength + 6, maxCategoryLength + 2);
+            l.printBottomBorder(maxLength + 4);
+            l.printLine(category + ": ", maxLength);
+            l.printLine("[" + dueDate + "]  - "+ title, maxLength);
+            l.printBottomBorder(maxLength + 4);
             cout << "Task added successfully!" << endl;
         }
     }
@@ -312,18 +364,24 @@ vector<Task*> searchTasks(const LinkedList& tasks, int searchChoice, const strin
             default:
                 break;
         }
-
         current = current->next;
     }
-
     return matchingTasks;
 }
 
 void searchTask(const LinkedList& tasks) {
-    cout << "Search by" << endl;
-    cout << "1. Title" << endl;
-    cout << "2. Category" << endl;
-    cout << "3. Date" << endl;
+    LinkedList l;
+    int maxLength = 12;
+
+    l.printBottomBorder(maxLength + 4);
+
+    l.printLine("Search By:", maxLength);
+    l.printLine("1. Title", maxLength);
+    l.printLine("2. Category", maxLength);
+    l.printLine("3. Due Date", maxLength);
+
+    l.printBottomBorder(maxLength + 4);
+
     cout << "Your choice: ";
     int searchChoice;
     cin >> searchChoice;
@@ -379,16 +437,24 @@ void searchTask(const LinkedList& tasks) {
 }
 
 void updateTask(LinkedList& tasks) {
+    LinkedList l;
     if (tasks.pendingTaskCount == 0) {
         cout << "No pending tasks to update." << endl;
         return;
     }
+    int searchmaxLength = 12;
+    int maxLength = 25;
 
-    cout << "Search by" << endl;
-    cout << "1. Title" << endl;
-    cout << "2. Category" << endl;
-    cout << "3. Date" << endl;
-    cout << "4. Back" << endl;
+    l.printBottomBorder(searchmaxLength + 4);
+
+    l.printLine("Search By:", searchmaxLength);
+    l.printLine("1. Title", searchmaxLength);
+    l.printLine("2. Category", searchmaxLength);
+    l.printLine("3. Due Date", searchmaxLength);
+    l.printLine("4. Back", searchmaxLength);
+
+    l.printBottomBorder(searchmaxLength + 4);
+
     cout << "Your choice: ";
     int searchChoice;
     cin >> searchChoice;
@@ -405,10 +471,14 @@ void updateTask(LinkedList& tasks) {
                 cout << "Task/s found:" << endl;
                 tasks.displayTasks(matchingTasks);
 
-                cout << "1. Mark all completed" << endl;
-                cout << "2. Delete all" << endl;
-                cout << "3. Back" << endl;
-                cout << "Your choice: ";
+                l.printBottomBorder(maxLength + 4);
+
+                l.printLine("1. Mark all completed", maxLength);
+                l.printLine("2. Delete all", maxLength);
+                l.printLine("3. Back", maxLength);
+
+                l.printBottomBorder(maxLength + 4);
+
                 int updateChoice;
                 cin >> updateChoice;
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -467,9 +537,14 @@ void updateTask(LinkedList& tasks) {
             if (!found) {
                 cout << "Task/s not found." << endl;
             } else {
-                cout << "1. Mark all completed" << endl;
-                cout << "2. Delete all" << endl;
-                cout << "3. Back" << endl;
+                l.printBottomBorder(maxLength + 4);
+
+                l.printLine("1. Mark all completed", maxLength);
+                l.printLine("2. Delete all", maxLength);
+                l.printLine("3. Back", maxLength);
+
+                l.printBottomBorder(maxLength + 4);
+
                 cout << "Your choice: ";
                 int updateChoice;
                 cin >> updateChoice;
@@ -549,9 +624,14 @@ void updateTask(LinkedList& tasks) {
             if (!found) {
                 cout << "Task/s not found." << endl;
             } else {
-                cout << "1. Mark all completed" << endl;
-                cout << "2. Delete all" << endl;
-                cout << "3. Back" << endl;
+                l.printBottomBorder(maxLength + 4);
+
+                l.printLine("1. Mark all completed", maxLength);
+                l.printLine("2. Delete all", maxLength);
+                l.printLine("3. Back", maxLength);
+
+                l.printBottomBorder(maxLength + 4);
+
                 cout << "Your choice: ";
                 int updateChoice;
                 cin >> updateChoice;
@@ -617,9 +697,19 @@ void updateTask(LinkedList& tasks) {
 }
 
 void viewTasks(const LinkedList& tasks) {
-    cout << "1. View Pending Tasks" << endl;
-    cout << "2. View Completed Tasks" << endl;
-    cout << "3. View Expired Tasks" << endl;
+    LinkedList l;
+    int maxTitleLength = 0;
+    int maxCategoryLength = 0;
+    int maxDueDateLength = 0;
+    int maxLength = 30;
+    l.printBottomBorder(maxLength + 4);
+
+    l.printLine("1. View Pending Tasks", maxLength);
+    l.printLine("2. View Completed Tasks", maxLength);
+    l.printLine("3. View Expired Tasks", maxLength);
+
+    l.printBottomBorder(maxLength + 4);
+
     cout << "Your choice: ";
     int viewChoice;
     cin >> viewChoice;
@@ -636,10 +726,28 @@ void viewTasks(const LinkedList& tasks) {
                     if (!found) {
                         found = true;
                     }
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
+                    maxTitleLength = max(maxTitleLength, static_cast<int>(task->getTitle().length()));
+                    maxCategoryLength = max(maxCategoryLength, static_cast<int>(task->getCategory().length()));
+                    maxDueDateLength = max(maxDueDateLength, static_cast<int>(task->getDueDate().length()));
                 }
                 current = current->next;
             }
+            int maxLength = max(maxTitleLength + maxDueDateLength + 6, maxCategoryLength + 2); // Add some padding
+            l.printTopBorder("Pending Tasks", maxLength + 2);
+            current = tasks.head;
+            while (current != nullptr) {
+                Task* task = current->task;
+                if (!task->isCompleted() && !task->isExpired()) {
+                    string title = task->getTitle();
+                    string dueDate = task->getDueDate();
+                    string category = task->getCategory();
+
+                    l.printLine(category + ": ", maxLength);
+                    l.printLine("[" + dueDate + "] - " + title, maxLength);
+                }
+                current = current->next;
+            }
+            l.printBottomBorder(maxLength + 4);
 
             if (!found) {
                 cout << "No pending tasks." << endl;
@@ -647,7 +755,6 @@ void viewTasks(const LinkedList& tasks) {
             break;
         }
         case 2: {
-            cout << "Completed Tasks:" << endl;
             vector<Task*> completedTasks = tasks.getCompletedTasks();
             if (completedTasks.empty()) {
                 cout << "No completed tasks." << endl;
@@ -659,20 +766,42 @@ void viewTasks(const LinkedList& tasks) {
         case 3: {
             cout << "Expired Tasks:" << endl;
             LinkedList::Node* current = tasks.head;
+            vector<Task*> expiredTasks;
             bool found = false;
             while (current != nullptr) {
                 Task* task = current->task;
                 if (!task->isCompleted() && task->isExpired()) {
+                    expiredTasks.push_back(task);
                     if (!found) {
                         found = true;
                     }
-                    cout << "[" << task->getDueDate() << "] - " << task->getTitle() << endl;
                 }
                 current = current->next;
             }
 
             if (!found) {
                 cout << "No expired tasks." << endl;
+            } else {
+
+                // Calculate the maximum lengths for title and due date
+                for (Task* task : expiredTasks) {
+                    maxTitleLength = max(maxTitleLength, static_cast<int>(task->getTitle().length()));
+                    maxCategoryLength = max(maxCategoryLength, static_cast<int>(task->getCategory().length()));
+                    maxDueDateLength = max(maxDueDateLength, static_cast<int>(task->getDueDate().length()));
+                }
+
+                int maxLength = max(maxTitleLength + maxDueDateLength + 6, maxCategoryLength + 2); // Add some padding
+                l.printTopBorder("EXPIRED TASKS", maxLength + 2);
+
+                for (Task* task : expiredTasks) {
+                    string category = task->getCategory();
+                    string title = task->getTitle();
+                    string dueDate = task->getDueDate();
+
+                    l.printLine(category + ": ", maxLength);
+                    l.printLine("[" + dueDate + "] - " + title, maxLength);
+                }
+                l.printBottomBorder(maxLength + 4);
             }
             break;
         }
@@ -684,9 +813,12 @@ void viewTasks(const LinkedList& tasks) {
 
 
 void about() {
-    cout << "Task Manager v1.0" << endl;
-    cout << "Developed by [Your Name]" << endl;
-    cout << "https://www.example.com" << endl;
+    LinkedList l;
+    l.printBottomBorder(40);
+
+    l.printLine("Search By:", 40);
+
+    l.printBottomBorder(40);
 }
 
 bool isValidDate(const string& date) {
