@@ -348,6 +348,9 @@ int getUserChoice();
 int main() {
     LinkedList tasks;
     int choice, pendingTaskCount;
+    
+    LinkedList l;
+    int maxLength = 30;
     vector<User> userAccounts;
     loadUserAccounts(userAccounts);
 
@@ -356,10 +359,12 @@ int main() {
     bool loggedIn = false;
 
     do {
-        cout << "========= User Management =========" << endl;
-        cout << "1. Sign Up" << endl;
-        cout << "2. Login" << endl;
-        cout << "3. Exit" << endl;
+        l.printTopBorder("User Management", maxLength + 2);
+        l.printLine("1. Sign Up", maxLength);
+        l.printLine("2. Login", maxLength);
+        l.printLine("3. Exit", maxLength);
+        l.printBottomBorder(maxLength + 4);
+
         cout << "Enter your choice: ";
         cin >> choice;
 
