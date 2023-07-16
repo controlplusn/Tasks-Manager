@@ -12,7 +12,7 @@ using namespace std;
 struct Task {
     string name;
     string description;
-    time_t dueDate; // Add a due date field using time_t data type
+    time_t dueDate;
 };
 
 struct User {
@@ -22,6 +22,7 @@ struct User {
 };
 
 vector<User> users;
+User* loggedInUser = nullptr;  // Pointer to the logged-in user
 
 // Function to save tasks to a file
 void saveTasksToFile(const string& filename) {
@@ -33,12 +34,16 @@ void saveTasksToFile(const string& filename) {
     }
 
     for (const auto& user : users) {
+        outputFile << "User: " << user.name << endl;  // Save the username
+        outputFile << "Password: " << user.password << endl;  // Save the password
+
         for (const auto& task : user.tasks) {
             outputFile << "Task: " << task.name << endl;
             outputFile << "Task Description: " << task.description << endl;
-            outputFile << "Due Date: " << task.dueDate << endl; // Save the due date as well
+            outputFile << "Due Date: " << task.dueDate << endl;
             outputFile << "-----------------------" << endl;
         }
+        outputFile << endl;  // Add a newline between users
     }
 
     outputFile.close();
@@ -68,23 +73,23 @@ void displayUsers() {
     }
 }
 
-bool loginUser() {
+User* loginUser() {
     string name, password;
     cout << "Enter name: ";
     cin.ignore();
     getline(cin, name);
     cout << "Enter password: ";
-    cin >> password;
+    getline(cin, password);
 
-    for (const auto& user : users) {
+    for (auto& user : users) {
         if (user.name == name && user.password == password) {
             cout << "Login successful!" << endl;
-            return true;
+            return &user;
         }
     }
 
     cout << "Login failed. Invalid username or password." << endl;
-    return false;
+    return nullptr;
 }
 
 void addTask() {
@@ -92,35 +97,40 @@ void addTask() {
     cout << "Enter task name: ";
     cin.ignore();
     getline(cin, newTask.name);
-    cout << "Enter task description: ";
-    getline(cin, newTask.description);
+
+    cout << "Do you want to add a description? (Y/N): ";
+    string addDescriptionChoice;
+    getline(cin, addDescriptionChoice);
+
+    if (addDescriptionChoice == "Y" || addDescriptionChoice == "y") {
+        cout << "Enter task description: ";
+        getline(cin, newTask.description);
+    }
+
     cout << "Enter due date (MM/DD/YYYY HH:MM AM/PM): ";
     string dueDateStr;
     getline(cin, dueDateStr);
 
-    // Parse the due date string using std::istringstream
     istringstream ss(dueDateStr);
     tm tm = {};
     ss >> get_time(&tm, "%m/%d/%Y %I:%M %p");
-
-    // Convert std::tm to time_t
     newTask.dueDate = std::mktime(&tm);
 
-    users.back().tasks.push_back(newTask);
+    loggedInUser->tasks.push_back(newTask);
     cout << "Task added successfully!" << endl;
 }
 
 void viewTasks() {
-    if (users.back().tasks.empty()) {
+    if (loggedInUser->tasks.empty()) {
         cout << "No tasks found." << endl;
     } else {
         cout << "========= Tasks =========" << endl;
         int taskNumber = 1;
-        for (const auto& task : users.back().tasks) {
+        for (const auto& task : loggedInUser->tasks) {
             cout << "Task " << taskNumber << ":" << endl;
             cout << "Name: " << task.name << endl;
             cout << "Description: " << task.description << endl;
-            cout << "Due Date: " << asctime(localtime(&task.dueDate)); // Convert and display the due date as a string
+            cout << "Due Date: " << asctime(localtime(&task.dueDate));
             cout << "-----------------------" << endl;
             taskNumber++;
         }
@@ -128,17 +138,17 @@ void viewTasks() {
 }
 
 bool deleteTask() {
-    if (users.back().tasks.empty()) {
+    if (loggedInUser->tasks.empty()) {
         cout << "No tasks found." << endl;
         return false;
     } else {
         cout << "========= Tasks =========" << endl;
         int taskNumber = 1;
-        for (auto& task : users.back().tasks) {
+        for (auto& task : loggedInUser->tasks) {
             cout << "Task " << taskNumber << ":" << endl;
             cout << "Name: " << task.name << endl;
             cout << "Description: " << task.description << endl;
-            cout << "Due Date: " << asctime(localtime(&task.dueDate)); // Convert and display the due date as a string
+            cout << "Due Date: " << asctime(localtime(&task.dueDate));
             cout << "-----------------------" << endl;
             taskNumber++;
         }
@@ -147,8 +157,8 @@ bool deleteTask() {
         cout << "Enter the task number to delete (0 to go back): ";
         cin >> taskIndex;
 
-        if (taskIndex >= 1 && taskIndex <= users.back().tasks.size()) {
-            users.back().tasks.erase(users.back().tasks.begin() + taskIndex - 1);
+        if (taskIndex >= 1 && taskIndex <= loggedInUser->tasks.size()) {
+            loggedInUser->tasks.erase(loggedInUser->tasks.begin() + taskIndex - 1);
             cout << "Task deleted successfully!" << endl;
             return true;
         } else if (taskIndex == 0) {
@@ -167,23 +177,23 @@ void checkTaskReminders() {
 
     cout << "========= Task Reminders =========" << endl;
 
-    for (const auto& user : users) {
-        for (const auto& task : user.tasks) {
-            struct tm* taskDueDate = localtime(&task.dueDate);
-            if (localTime->tm_year == taskDueDate->tm_year && localTime->tm_mon == taskDueDate->tm_mon &&
-                localTime->tm_mday == taskDueDate->tm_mday && localTime->tm_hour == taskDueDate->tm_hour &&
-                localTime->tm_min == taskDueDate->tm_min) {
-                cout << "Task Name: " << task.name << endl;
-                cout << "Description: " << task.description << endl;
-                cout << "Due Date: " << asctime(taskDueDate);
-                cout << "----------------------------------" << endl;
-            }
+    for (const auto& task : loggedInUser->tasks) {
+        struct tm* taskDueDate = localtime(&task.dueDate);
+        if (localTime->tm_year == taskDueDate->tm_year && localTime->tm_mon == taskDueDate->tm_mon &&
+            localTime->tm_mday == taskDueDate->tm_mday && localTime->tm_hour == taskDueDate->tm_hour &&
+            localTime->tm_min == taskDueDate->tm_min) {
+            cout << "Task Name: " << task.name << endl;
+            cout << "Description: " << task.description << endl;
+            cout << "Due Date: " << asctime(taskDueDate);
+            cout << "----------------------------------" << endl;
         }
     }
 }
 
 void chooseUser() {
-    if (loginUser()) {
+    loggedInUser = loginUser();
+
+    if (loggedInUser != nullptr) {
         int userChoice;
         do {
             cout << "========= Task Manager =========" << endl;
@@ -192,10 +202,12 @@ void chooseUser() {
             cout << "3. Delete Task" << endl;
             cout << "4. Save Tasks to File" << endl;
             cout << "5. Load Tasks from File" << endl;
-            cout << "6. Check Task Reminders" << endl; // New option to check task reminders
-            cout << "7. Exit" << endl;
+            cout << "6. Check Task Reminders" << endl;
+            cout << "7. Log out" << endl;
+            cout << "8. Exit" << endl;
             cout << "Enter your choice: ";
             cin >> userChoice;
+
             switch (userChoice) {
                 case 1:
                     addTask();
@@ -223,31 +235,118 @@ void chooseUser() {
                     break;
                 }
                 case 6:
-                    checkTaskReminders(); // Call the new function to check task reminders
+                    checkTaskReminders();
                     break;
                 case 7:
+                    cout << "Logging out." << endl;
+                    loggedInUser = nullptr;
+                    break;
+                case 8:
                     cout << "Exiting Task Manager. Goodbye!" << endl;
                     break;
                 default:
                     cout << "Invalid choice. Please try again." << endl;
             }
+
             cout << endl;
-        } while (userChoice != 7);
+        } while (userChoice != 8);
     }
 }
 
-int main() {
-    int choice;
+void loadUserAccounts(const string& filename) {
+    ifstream inputFile(filename);
 
+    if (!inputFile) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    string line;
+    User currentUser;
+    bool isNewUser = true;
+
+    while (getline(inputFile, line)) {
+        istringstream iss(line);
+        string prefix;
+        if (iss >> prefix) {
+            if (prefix == "User:") {
+                if (!isNewUser) {
+                    users.push_back(currentUser);
+                    currentUser.tasks.clear();
+                }
+                isNewUser = false;
+                iss >> currentUser.name;
+            } else if (prefix == "Password:") {
+                iss >> currentUser.password;
+            } else if (prefix == "Task:") {
+                Task newTask;
+                getline(iss >> ws, newTask.name);
+                getline(inputFile, newTask.description);
+                string dueDateStr;
+                getline(inputFile, dueDateStr);
+
+                istringstream ss(dueDateStr);
+                tm tm = {};
+                ss >> get_time(&tm, "%a %b %d %H:%M:%S %Y");
+                newTask.dueDate = std::mktime(&tm);
+
+                currentUser.tasks.push_back(newTask);
+            }
+        }
+    }
+
+    if (!isNewUser) {
+        users.push_back(currentUser);
+    }
+
+    inputFile.close();
+}
+
+void saveUserAccounts(const string& filename) {
+    ofstream outputFile(filename);
+
+    if (!outputFile) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    for (const auto& user : users) {
+        outputFile << "User: " << user.name << endl;
+        outputFile << "Password: " << user.password << endl;
+
+        for (const auto& task : user.tasks) {
+            outputFile << "Task: " << task.name << endl;
+            outputFile << task.description << endl;
+            outputFile << put_time(localtime(&task.dueDate), "%a %b %d %H:%M:%S %Y") << endl;
+        }
+
+        outputFile << endl;
+    }
+
+    outputFile.close();
+    cout << "User accounts saved to file successfully!" << endl;
+}
+
+int main() {
+    loadUserAccounts("accounts.txt");
+
+    int choice;
     do {
         cout << "========= User Management =========" << endl;
         cout << "1. Add User" << endl;
         cout << "2. Display Users" << endl;
         cout << "3. Choose User" << endl;
-        cout << "4. Parse Due Date" << endl; // Added option for parsing a due date
+        cout << "4. Save User Accounts to File" << endl;
         cout << "5. Exit" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
+
+        if (cin.fail()) {
+            cout << "Invalid input. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -260,25 +359,11 @@ int main() {
                 chooseUser();
                 break;
             case 4: {
-                std::string dueDateStr;
-
-                cout << "Enter the due date string (MM/DD/YYYY HH:MM AM/PM): ";
+                string filename;
+                cout << "Enter the filename to save user accounts: ";
                 cin.ignore();
-                getline(cin, dueDateStr);
-
-                // Parse and display the due date
-                istringstream ss(dueDateStr);
-                tm tm = {};
-                ss >> std::get_time(&tm, "%m/%d/%Y %I:%M %p");
-                if (ss.fail()) {
-                    cout << "Failed to parse due date." << endl;
-                } else {
-                    cout << "Year: " << tm.tm_year + 1900 << endl;
-                    cout << "Month: " << tm.tm_mon + 1 << endl;
-                    cout << "Day: " << tm.tm_mday << endl;
-                    cout << "Hour: " << tm.tm_hour << endl;
-                    cout << "Minute: " << tm.tm_min << endl;
-                }
+                getline(cin, filename);
+                saveUserAccounts(filename);
                 break;
             }
             case 5:
@@ -293,3 +378,4 @@ int main() {
 
     return 0;
 }
+
