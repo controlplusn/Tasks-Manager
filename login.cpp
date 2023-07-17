@@ -626,27 +626,21 @@ void createTask(LinkedList& tasks, const string& username) {
             cout << "Date not valid. The date has passed the current date." << endl;
             cout << "Current Date: " << currentDate << endl;
         } else {
-            validDate = true;  // Set validDate to true
-        }
-
-        if (validDate) {  // Add the task only when validDate is true
-            Task* newTask = new Task(title, category, dueDate, username);
+            Task* newTask = new Task(title, category, dueDate);
             tasks.addTask(newTask);
-            int maxTitleLength = 0;
-            int maxCategoryLength = 0;
-            int maxDueDateLength = 0;
 
-            maxTitleLength = max(maxTitleLength, static_cast<int>(title.length()));
-            maxDueDateLength = max(maxDueDateLength, static_cast<int>(dueDate.length()));
-            maxCategoryLength = max(maxCategoryLength, static_cast<int>(category.length()));
+            int maxTitleLength = static_cast<int>(title.length());
+            int maxDueDateLength = static_cast<int>(dueDate.length());
+            int maxCategoryLength = static_cast<int>(category.length());
 
-            
             int maxLength = max(maxTitleLength + maxDueDateLength + 6, maxCategoryLength + 2);
             l.printBottomBorder(maxLength + 4);
             l.printLine(category + ": ", maxLength);
-            l.printLine("[" + dueDate + "]  - "+ title, maxLength);
+            l.printLine("[" + dueDate + "]  - " + title, maxLength);
             l.printBottomBorder(maxLength + 4);
             cout << "Task added successfully!" << endl;
+
+            break; // Exit the loop after successfully adding the task
         }
     }
 }
