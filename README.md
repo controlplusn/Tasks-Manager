@@ -7,33 +7,31 @@ It provides a user-friendly command-line interface to create, track, modify, and
 The Task Manager is built using the power of C++ and leveraging the efficient linked list data structure, the task manager program offers a seamless and intuitive user experience. Users can effortlessly manage their tasks, track progress, and stay organized with ease. The program's user-friendly interface and robust functionality enable efficient task creation, organization, and monitoring. By harnessing the advantages of linked lists, the program ensures optimal performance and memory utilization, allowing for dynamic task manipulation and seamless task management. Experience the power and efficiency of the task manager program as it simplifies your workflow and helps users stay on track.
 
 ## Features
+1. Login System:
+   -The login system in our program provides users with a secure and convenient way to access the task manager. 
 
-1. Create Task:
+2. Create Task:
    - Users can create a task by providing a title, description, and deadline.
    
-2. Task Storage:
+3. Task Storage:
    - Tasks are stored using a linked list data structure.
    
-3. Task Listing:
+4. Task Listing:
    - All tasks are listed, showing the titles and deadlines.
    - Tasks can be sorted based on the user's chosen criteria, such as by deadline or by name.
    
-4. Task Filtering:
+5. Task Filtering:
    - Users can filter tasks based on criteria such as status, priority, or category.
    
-5. Task Modification:
+6. Task Modification:
    - Users can update task information, including the title, description, and deadline.
    
-6. Task Completion:
+7. Task Completion:
    - Users can mark tasks as completed.
    - Each task has an option to toggle the completion status.
    
-7. Task Deletion:
+8. Task Deletion:
    - Users can delete tasks they no longer need.
-   
-8. Task Reminders:
-   - Provide reminders for upcoming task deadlines.
-   - Reminders can be in the form of visual notifications or email notifications.
    
 9. Task Search:
    - Users can search for specific tasks based on keywords or categories.
