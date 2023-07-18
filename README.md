@@ -8,32 +8,32 @@ The Task Manager is built using the power of C++ and leveraging the efficient li
 
 ## Features
 1. Login System:
-   -The login system in our program provides users with a secure and convenient way to access the task manager. 
+   - The login system in our program provides users with a secure and convenient way to access the task manager. 
 
-2. Create Task:
+3. Create Task:
    - Users can create a task by providing a title, description, and deadline.
    
-3. Task Storage:
+4. Task Storage:
    - Tasks are stored using a linked list data structure.
    
-4. Task Listing:
+5. Task Listing:
    - All tasks are listed, showing the titles and deadlines.
    - Tasks can be sorted based on the user's chosen criteria, such as by deadline or by name.
    
-5. Task Filtering:
+6. Task Filtering:
    - Users can filter tasks based on criteria such as status, priority, or category.
    
-6. Task Modification:
+7. Task Modification:
    - Users can update task information, including the title, description, and deadline.
    
-7. Task Completion:
+8. Task Completion:
    - Users can mark tasks as completed.
    - Each task has an option to toggle the completion status.
    
-8. Task Deletion:
+9. Task Deletion:
    - Users can delete tasks they no longer need.
    
-9. Task Search:
+10. Task Search:
    - Users can search for specific tasks based on keywords or categories.
    
 ## Installation
