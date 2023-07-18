@@ -21,10 +21,7 @@ The Task Manager is built using the power of C++ and leveraging the efficient li
    - Tasks can be sorted based on the user's chosen criteria, such as by deadline or by name.
    
 6. Task Filtering:
-   - Users can filter tasks based on criteria such as status, priority, or category.
-   
-7. Task Modification:
-   - Users can update task information, including the title, category, and deadline.
+   - Users can filter tasks based on criteria such as Title, priority, or category.
    
 8. Task Completion:
    - Users can mark tasks as completed.
