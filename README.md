@@ -11,7 +11,7 @@ The Task Manager is built using the power of C++ and leveraging the efficient li
    - The login system in our program provides users with a secure and convenient way to access the task manager. 
 
 3. Create Task:
-   - Users can create a task by providing a title, description, and deadline.
+   - Users can create a task by providing a title and deadline.
    
 4. Task Storage:
    - Tasks are stored using a linked list data structure.
