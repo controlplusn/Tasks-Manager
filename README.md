@@ -17,11 +17,11 @@ The Task Manager is built using the power of C++ and leveraging the efficient li
    - Tasks are stored using a linked list data structure.
    
 5. Task Listing:
-   - All tasks are listed, showing the titles and deadlines.
-   - Tasks can be sorted based on the user's chosen criteria, such as by deadline or by name.
+   - All tasks are listed, showing the titles, due dates, and deadlines.
+   - Tasks can be sorted based on the user's chosen criteria, such as by deadline, by name or even duedates.
    
 6. Task Filtering:
-   - Users can filter tasks based on criteria such as Title, priority, or category.
+   - Users can filter tasks based on criteria such as Title, DueDate, or category.
    
 8. Task Completion:
    - Users can mark tasks as completed.
@@ -31,7 +31,7 @@ The Task Manager is built using the power of C++ and leveraging the efficient li
    - Users can delete tasks they no longer need.
    
 10. Task Search:
-   - Users can search for specific tasks based on keywords or categories.
+   - Users can search for specific tasks based on titles, due dates, or categories.
    
 ## Installation
 
