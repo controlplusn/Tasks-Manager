@@ -4,10 +4,7 @@ A command-line Task Manager application to organize and manage tasks efficiently
 The Task Manager is a C++ program designed to help individuals efficiently organize and manage their tasks. 
 It provides a user-friendly command-line interface to create, track, modify, and complete tasks.
 
-The Task Manager is a C++ program designed to implement various data structures, including Arrays, Heaps, 
-Stacks, and Queues, in the context of task management. By showcasing the functionality and benefits of 
-these data structures, it empowers users to efficiently manage their tasks while deepening their knowledge 
-and understanding of fundamental data structures in computer science.
+The Task Manager is built using the power of C++ and leveraging the efficient linked list data structure, the task manager program offers a seamless and intuitive user experience. Users can effortlessly manage their tasks, track progress, and stay organized with ease. The program's user-friendly interface and robust functionality enable efficient task creation, organization, and monitoring. By harnessing the advantages of linked lists, the program ensures optimal performance and memory utilization, allowing for dynamic task manipulation and seamless task management. Experience the power and efficiency of the task manager program as it simplifies your workflow and helps users stay on track.
 
 ## Features
 
