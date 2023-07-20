@@ -1,0 +1,406 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <ctime>
+#include <iomanip>
+
+using namespace std;
+
+struct Task {
+    string name;
+    string description;
+    time_t dueDate;
+};
+
+struct User {
+    string name;
+    string password;
+    vector<Task> tasks;
+};
+
+vector<User> users;
+User* loggedInUser = nullptr;  // Pointer to the logged-in user
+
+// Function to save tasks to a file
+void saveTasksToFile(const string& filename) {
+    ofstream outputFile(filename);
+
+    if (!outputFile) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    for (const auto& user : users) {
+        outputFile << "User: " << user.name << endl;  // Save the username
+        outputFile << "Password: " << user.password << endl;  // Save the password
+
+        for (const auto& task : user.tasks) {
+            outputFile << "Task: " << task.name << endl;
+            outputFile << "Task Description: " << task.description << endl;
+            outputFile << "Due Date: " << task.dueDate << endl;
+            outputFile << "-----------------------" << endl;
+        }
+        outputFile << endl;  // Add a newline between users
+    }
+
+    outputFile.close();
+    cout << "Tasks saved to file successfully!" << endl;
+}
+
+void addUser() {
+    User newUser;
+    cout << "Enter name: ";
+    cin.ignore();
+    getline(cin, newUser.name);
+    cout << "Enter password: ";
+    getline(cin, newUser.password);
+    users.push_back(newUser);
+    cout << "User added successfully!" << endl;
+}
+
+void displayUsers() {
+    if (users.empty()) {
+        cout << "No users found." << endl;
+    } else {
+        cout << "========= Users =========" << endl;
+        for (const auto& user : users) {
+            cout << "Name: " << user.name << endl;
+            cout << "-----------------------" << endl;
+        }
+    }
+}
+
+User* loginUser() {
+    string name, password;
+    cout << "Enter name: ";
+    cin.ignore();
+    getline(cin, name);
+    cout << "Enter password: ";
+    getline(cin, password);
+
+    for (auto& user : users) {
+        if (user.name == name && user.password == password) {
+            cout << "Login successful!" << endl;
+            return &user;
+        }
+    }
+
+    cout << "Login failed. Invalid username or password." << endl;
+    return nullptr;
+}
+
+void addTask() {
+    Task newTask;
+    cout << "Enter task name: ";
+    cin.ignore();
+    getline(cin, newTask.name);
+
+    string addDescriptionChoice;
+    bool validChoice = false;
+
+    while (!validChoice) {
+        cout << "Do you want to add a description? (Y/N): ";
+        getline(cin, addDescriptionChoice);
+
+        if (addDescriptionChoice == "Y" || addDescriptionChoice == "y") {
+            cout << "Enter task description: ";
+            getline(cin, newTask.description);
+            validChoice = true;
+        } else if (addDescriptionChoice == "N" || addDescriptionChoice == "n") {
+            validChoice = true;
+        } else {
+            cout << "Invalid choice. Please enter 'Y' for Yes or 'N' for No." << endl;
+        }
+    }
+
+    string dueDateStr;
+    bool validDueDate = false;
+
+    while (!validDueDate) {
+        cout << "Enter due date (MM/DD/YYYY HH:MM AM/PM): ";
+        getline(cin, dueDateStr);
+
+        istringstream ss(dueDateStr);
+        tm tm = {};
+        ss >> get_time(&tm, "%m/%d/%Y %I:%M %p");
+
+        if (ss.fail()) {
+            cout << "Invalid due date format. Please try again." << endl;
+        } else {
+            // Validate if the entire input was consumed
+            char remaining;
+            if (ss >> remaining) {
+                cout << "Invalid due date format. Please enter the complete date and time." << endl;
+            } else {
+                newTask.dueDate = std::mktime(&tm);
+                validDueDate = true;
+            }
+        }
+    }
+
+    loggedInUser->tasks.push_back(newTask);
+    cout << "Task added successfully!" << endl;
+}
+
+void viewTasks() {
+    if (loggedInUser->tasks.empty()) {
+        cout << "No tasks found." << endl;
+    } else {
+        cout << "========= Tasks =========" << endl;
+        int taskNumber = 1;
+        for (const auto& task : loggedInUser->tasks) {
+            cout << "Task " << taskNumber << ":" << endl;
+            cout << "Name: " << task.name << endl;
+            cout << "Description: " << task.description << endl;
+            cout << "Due Date: " << asctime(localtime(&task.dueDate));
+            cout << "-----------------------" << endl;
+            taskNumber++;
+        }
+    }
+}
+
+bool deleteTask() {
+    if (loggedInUser->tasks.empty()) {
+        cout << "No tasks found." << endl;
+        return false;
+    } else {
+        cout << "========= Tasks =========" << endl;
+        int taskNumber = 1;
+        for (auto& task : loggedInUser->tasks) {
+            cout << "Task " << taskNumber << ":" << endl;
+            cout << "Name: " << task.name << endl;
+            cout << "Description: " << task.description << endl;
+            cout << "Due Date: " << asctime(localtime(&task.dueDate));
+            cout << "-----------------------" << endl;
+            taskNumber++;
+        }
+
+        int taskIndex;
+        cout << "Enter the task number to delete (0 to go back): ";
+        cin >> taskIndex;
+
+        if (taskIndex >= 1 && taskIndex <= loggedInUser->tasks.size()) {
+            loggedInUser->tasks.erase(loggedInUser->tasks.begin() + taskIndex - 1);
+            cout << "Task deleted successfully!" << endl;
+            return true;
+        } else if (taskIndex == 0) {
+            cout << "Going back to Task Manager menu." << endl;
+            return true;
+        } else {
+            cout << "Invalid task number. Please try again." << endl;
+            return false;
+        }
+    }
+}
+
+void checkTaskReminders() {
+    time_t currentTime = time(nullptr);
+    struct tm* localTime = localtime(&currentTime);
+
+    cout << "========= Task Reminders =========" << endl;
+
+    for (const auto& task : loggedInUser->tasks) {
+        struct tm* taskDueDate = localtime(&task.dueDate);
+        if (localTime->tm_year == taskDueDate->tm_year && localTime->tm_mon == taskDueDate->tm_mon &&
+            localTime->tm_mday == taskDueDate->tm_mday && localTime->tm_hour == taskDueDate->tm_hour &&
+            localTime->tm_min == taskDueDate->tm_min) {
+            cout << "Task Name: " << task.name << endl;
+            cout << "Description: " << task.description << endl;
+            cout << "Due Date: " << asctime(taskDueDate);
+            cout << "----------------------------------" << endl;
+        }
+    }
+}
+
+void chooseUser() {
+    loggedInUser = loginUser();
+
+    if (loggedInUser != nullptr) {
+        int userChoice;
+        do {
+            cout << "========= Task Manager =========" << endl;
+            cout << "1. Add Task" << endl;
+            cout << "2. View Tasks" << endl;
+            cout << "3. Delete Task" << endl;
+            cout << "4. Save Tasks to File" << endl;
+            cout << "5. Load Tasks from File" << endl;
+            cout << "6. Check Task Reminders" << endl;
+            cout << "7. Log out" << endl;
+            cout << "8. Exit" << endl;
+            cout << "Enter your choice: ";
+            cin >> userChoice;
+
+            switch (userChoice) {
+                case 1:
+                    addTask();
+                    break;
+                case 2:
+                    viewTasks();
+                    break;
+                case 3:
+                    deleteTask();
+                    break;
+                case 4: {
+                    string filename;
+                    cout << "Enter the filename to save tasks: ";
+                    cin.ignore();
+                    getline(cin, filename);
+                    saveTasksToFile(filename);
+                    break;
+                }
+                case 5: {
+                    string filename;
+                    cout << "Enter the filename to load tasks: ";
+                    cin.ignore();
+                    getline(cin, filename);
+                    // Implement the function to load tasks from file
+                    break;
+                }
+                case 6:
+                    checkTaskReminders();
+                    break;
+                case 7:
+                    cout << "Logging out." << endl;
+                    loggedInUser = nullptr;
+                    break;
+                case 8:
+                    cout << "Exiting Task Manager. Goodbye!" << endl;
+                    break;
+                default:
+                    cout << "Invalid choice. Please try again." << endl;
+            }
+
+            cout << endl;
+        } while (userChoice != 8);
+    }
+}
+
+void loadUserAccounts(const string& filename) {
+    ifstream inputFile(filename);
+
+    if (!inputFile) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    string line;
+    User currentUser;
+    bool isNewUser = true;
+
+    while (getline(inputFile, line)) {
+        istringstream iss(line);
+        string prefix;
+        if (iss >> prefix) {
+            if (prefix == "User:") {
+                if (!isNewUser) {
+                    users.push_back(currentUser);
+                    currentUser.tasks.clear();
+                }
+                isNewUser = false;
+                iss >> currentUser.name;
+            } else if (prefix == "Password:") {
+                iss >> currentUser.password;
+            } else if (prefix == "Task:") {
+                Task newTask;
+                getline(iss >> ws, newTask.name);
+                getline(inputFile, newTask.description);
+                string dueDateStr;
+                getline(inputFile, dueDateStr);
+
+                istringstream ss(dueDateStr);
+                tm tm = {};
+                ss >> get_time(&tm, "%a %b %d %H:%M:%S %Y");
+                newTask.dueDate = std::mktime(&tm);
+
+                currentUser.tasks.push_back(newTask);
+            }
+        }
+    }
+
+    if (!isNewUser) {
+        users.push_back(currentUser);
+    }
+
+    inputFile.close();
+}
+
+void saveUserAccounts(const string& filename) {
+    ofstream outputFile(filename);
+
+    if (!outputFile) {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    for (const auto& user : users) {
+        outputFile << "User: " << user.name << endl;
+        outputFile << "Password: " << user.password << endl;
+
+        for (const auto& task : user.tasks) {
+            outputFile << "Task: " << task.name << endl;
+            outputFile << task.description << endl;
+            outputFile << put_time(localtime(&task.dueDate), "%a %b %d %H:%M:%S %Y") << endl;
+        }
+
+        outputFile << endl;
+    }
+
+    outputFile.close();
+    cout << "User accounts saved to file successfully!" << endl;
+}
+
+int main() {
+    loadUserAccounts("accounts.txt");
+
+    int choice;
+    do {
+        cout << "========= User Management =========" << endl;
+        cout << "1. Add User" << endl;
+        cout << "2. Display Users" << endl;
+        cout << "3. Choose User" << endl;
+        cout << "4. Save User Accounts to File" << endl;
+        cout << "5. Exit" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (cin.fail()) {
+            cout << "Invalid input. Please enter a number." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                addUser();
+                break;
+            case 2:
+                displayUsers();
+                break;
+            case 3:
+                chooseUser();
+                break;
+            case 4: {
+                string filename;
+                cout << "Enter the filename to save user accounts: ";
+                cin.ignore();
+                getline(cin, filename);
+                saveUserAccounts(filename);
+                break;
+            }
+            case 5:
+                cout << "Exiting User Management. Goodbye!" << endl;
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+
+        cout << endl;
+    } while (choice != 5);
+
+    return 0;
+}
+
